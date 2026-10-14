@@ -26,3 +26,32 @@ Route::get('/pembatalan', [BookingController::class, 'lookupForm'])->name('booki
 Route::post('/pembatalan', [BookingController::class, 'lookup'])->middleware('throttle:10,1')->name('bookings.lookup.submit');
 Route::get('/pesanan/{booking:booking_code}', [BookingController::class, 'show'])->name('bookings.show');
 Route::post('/pesanan/{booking:booking_code}/batal', [BookingController::class, 'cancel'])->name('bookings.cancel');
+
+// Login sederhana (Modul 2 – interim, akan diganti dengan Breeze/Fortify)
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
+
+Route::get('/login', function () {
+    return view('auth.login');
+})->name('login');
+
+Route::post('/login', function (Request $request) {
+    $credentials = $request->validate([
+        'email' => ['required', 'email'],
+        'password' => ['required'],
+    ]);
+
+    if (Auth::attempt($credentials)) {
+        $request->session()->regenerate();
+        return redirect()->intended('/');
+    }
+
+    return back()->withErrors(['email' => 'Email atau password salah.']);
+});
+
+Route::post('/logout', function (Request $request) {
+    Auth::logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+    return redirect('/');
+})->name('logout');
