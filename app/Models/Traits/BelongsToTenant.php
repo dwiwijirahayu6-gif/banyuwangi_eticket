@@ -2,11 +2,12 @@
 
 namespace App\Models\Traits;
 
-use Illuminate\Database\Eloquent\Builder;
 use App\Support\Tenancy\TenantContext;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 /**
- * @mixin \Illuminate\Database\Eloquent\Model
+ * @mixin Model
  */
 trait BelongsToTenant
 {
@@ -16,7 +17,7 @@ trait BelongsToTenant
         static::addGlobalScope('tenant', function (Builder $builder) {
             $context = app(TenantContext::class);
             if ($tenantId = $context->id()) {
-                $builder->where($builder->getQuery()->from . '.tenant_id', $tenantId);
+                $builder->where($builder->getQuery()->from.'.tenant_id', $tenantId);
             }
         });
 

@@ -2,16 +2,16 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
-use App\Models\Tenant;
-use App\Models\User;
-use App\Models\Destination;
-use App\Models\TicketType;
 use App\Models\Booking;
 use App\Models\BookingItem;
-use App\Models\Ticket;
+use App\Models\Destination;
 use App\Models\Payment;
+use App\Models\Tenant;
+use App\Models\Ticket;
+use App\Models\TicketType;
+use App\Models\User;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -122,7 +122,7 @@ class DatabaseSeeder extends Seeder
             'customer_phone' => '081234567890',
             'total_amount' => 20000,
             'status' => 'paid',
-             'visit_date' => '2026-09-25',
+            'visit_date' => '2026-09-25',
             'total_amount' => 20000,
             'status' => 'paid',
             'paid_at' => now(),

@@ -9,6 +9,8 @@ class Payment extends Model
 {
     protected $guarded = [];
 
+    const UPDATED_AT = null;
+
     public function booking(): BelongsTo
     {
         return $this->belongsTo(Booking::class);

@@ -2,8 +2,8 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
 use App\Support\Tenancy\TenantContext;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -11,7 +11,7 @@ class AppServiceProvider extends ServiceProvider
     {
         // Registrasi konteks tenant terpusat
         $this->app->scoped(TenantContext::class, function () {
-            return new TenantContext();
+            return new TenantContext;
         });
     }
 

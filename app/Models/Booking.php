@@ -19,6 +19,8 @@ class Booking extends Model
 
     protected $guarded = [];
 
+    const UPDATED_AT = null;
+
     protected function casts(): array
     {
         return [

@@ -10,6 +10,7 @@ class HomeController extends Controller
     {
         // Mengambil semua data destinasi beserta pengelolanya (tenant) dari MySQL
         $destinations = Destination::with('tenant')->get();
+
         return view('landing', compact('destinations'));
     }
 }

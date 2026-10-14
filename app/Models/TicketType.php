@@ -9,6 +9,8 @@ class TicketType extends Model
 {
     protected $guarded = [];
 
+    public const UPDATED_AT = null;
+
     public function destination(): BelongsTo
     {
         return $this->belongsTo(Destination::class);

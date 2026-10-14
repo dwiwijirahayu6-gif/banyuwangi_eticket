@@ -9,6 +9,8 @@ class BookingItem extends Model
 {
     protected $guarded = [];
 
+    public $timestamps = false;
+
     public function booking(): BelongsTo
     {
         return $this->belongsTo(Booking::class);
