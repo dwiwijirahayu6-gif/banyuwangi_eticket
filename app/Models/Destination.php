@@ -10,6 +10,8 @@ class Destination extends Model
 {
     protected $guarded = [];
 
+    public const UPDATED_AT = null;
+
     // Relasi ke Model Tenant (Pengelola)
     public function tenant(): BelongsTo
     {

@@ -25,7 +25,7 @@ class TenantContext
 
     public function id(): int
     {
-        if (!$this->has()) {
+        if (! $this->has()) {
             throw new RuntimeException('Tenant context belum tersedia.');
         }
 

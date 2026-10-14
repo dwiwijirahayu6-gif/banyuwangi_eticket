@@ -15,8 +15,11 @@ use Illuminate\Support\Str;
 class BookingService
 {
     public const PAYMENT_WINDOW_MINUTES = 30;
+
     public const MAX_TICKETS_PER_BOOKING = 10;
+
     public const MAX_DAYS_AHEAD = 30;
+
     public const TIMEZONE = 'Asia/Jakarta';
 
     /**
@@ -38,7 +41,9 @@ class BookingService
         }
 
         if ($quantities->sum() > self::MAX_TICKETS_PER_BOOKING) {
-            throw new DomainException('Maksimal '.self::MAX_TICKETS_PER_BOOKING.' tiket per pesanan.');
+            throw new DomainException(
+                'Maksimal '.self::MAX_TICKETS_PER_BOOKING.' tiket per pesanan.'
+            );
         }
 
         $ticketTypes = $destination->ticketTypes()
@@ -47,14 +52,41 @@ class BookingService
             ->keyBy('id');
 
         if ($ticketTypes->count() !== $quantities->count()) {
-            throw new DomainException('Jenis tiket yang dipilih tidak valid untuk destinasi ini.');
+            throw new DomainException(
+                'Jenis tiket yang dipilih tidak valid untuk destinasi ini.'
+            );
         }
 
-        return DB::transaction(function () use ($destination, $data, $quantities, $ticketTypes) {
+        return DB::transaction(function () use (
+            $destination, $data, $quantities, $ticketTypes
+        ) {
+            // Kunci destinasi agar checkout bersamaan lebih terkendali.
+            $lockedDestination = Destination::whereKey($destination->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $visitSlot = $this->getOrCreateVisitSlot(
+                $lockedDestination,
+                $data['visit_date']
+            );
+
+            $requestedTickets = $quantities->sum();
+
+            if ($visitSlot->quota_remaining < $requestedTickets) {
+                throw new DomainException(
+                    'Kuota tiket untuk tanggal tersebut tidak mencukupi.'
+                );
+            }
+
             $lines = $quantities->map(function (int $qty, $typeId) use ($ticketTypes) {
                 $price = (int) round((float) $ticketTypes[$typeId]->price);
 
-                return ['type' => $ticketTypes[$typeId], 'qty' => $qty, 'price' => $price, 'subtotal' => $price * $qty];
+                return [
+                    'type' => $ticketTypes[$typeId],
+                    'qty' => $qty,
+                    'price' => $price,
+                    'subtotal' => $price * $qty,
+                ];
             });
 
             $total = $lines->sum('subtotal');
@@ -73,12 +105,25 @@ class BookingService
             foreach ($lines as $line) {
                 BookingItem::create([
                     'booking_id' => $booking->id,
-                    'tenant_id' => $destination->tenant_id,
+                    'tenant_id' => $lockedDestination->tenant_id,
                     'ticket_type_id' => $line['type']->id,
+                    'visit_slot_id' => $visitSlot->id,
                     'quantity' => $line['qty'],
                     'unit_price_snapshot' => $line['price'],
                     'subtotal' => $line['subtotal'],
                 ]);
+            }
+
+            // Kurangi kuota dengan memastikan jumlahnya masih mencukupi.
+            $affected = DB::table('visit_slots')
+                ->where('id', $visitSlot->id)
+                ->where('quota_remaining', '>=', $requestedTickets)
+                ->decrement('quota_remaining', $requestedTickets);
+
+            if ($affected !== 1) {
+                throw new DomainException(
+                    'Kuota tiket berubah. Silakan coba checkout kembali.'
+                );
             }
 
             $reference = 'PAY-'.Str::upper(Str::random(12));
@@ -86,7 +131,6 @@ class BookingService
             Payment::create([
                 'booking_id' => $booking->id,
                 'payment_reference' => $reference,
-                // Payload simulasi. Ganti dengan payload QRIS dari payment gateway saat integrasi nyata.
                 'qris_payload' => "QRIS-SIMULASI|{$reference}|{$booking->booking_code}|{$total}",
                 'gross_amount' => $total,
                 'status' => 'pending',
@@ -96,43 +140,117 @@ class BookingService
         });
     }
 
+    private function getOrCreateVisitSlot(
+        Destination $destination,
+        string $visitDate
+    ): object {
+        // Gunakan slot yang sudah ada untuk tanggal yang dipilih.
+        $slot = DB::table('visit_slots')
+            ->where('destination_id', $destination->id)
+            ->where('visit_date', $visitDate)
+            ->lockForUpdate()
+            ->first();
+
+        if ($slot) {
+            return $slot;
+        }
+
+        // Ambil kapasitas awal dari slot terbaru destinasi ini.
+        $latestSlot = DB::table('visit_slots')
+            ->where('destination_id', $destination->id)
+            ->orderByDesc('visit_date')
+            ->orderByDesc('id')
+            ->first();
+
+        if (! $latestSlot) {
+            throw new DomainException(
+                'Kapasitas awal untuk destinasi ini belum ditetapkan.'
+            );
+        }
+
+        $capacity = (int) $latestSlot->quota_capacity;
+
+        $slotId = DB::table('visit_slots')->insertGetId([
+            'tenant_id' => $destination->tenant_id,
+            'destination_id' => $destination->id,
+            'visit_date' => $visitDate,
+            'quota_capacity' => $capacity,
+            'quota_remaining' => $capacity,
+        ]);
+
+        return DB::table('visit_slots')->where('id', $slotId)->first();
+    }
+
     /**
      * Tandai pesanan lunas dan terbitkan tiket. Aman dipanggil berulang (idempoten),
      * sehingga cocok dipakai juga oleh webhook payment gateway nantinya.
      */
     public function markAsPaid(Booking $booking): Booking
     {
-        return DB::transaction(function () use ($booking) {
-            $booking = Booking::whereKey($booking->id)->lockForUpdate()->firstOrFail();
+        $result = DB::transaction(function () use ($booking) {
+            $booking = Booking::whereKey($booking->id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
             if ($booking->status === 'paid') {
-                return $booking;
+                return ['expired' => false, 'booking' => $booking];
             }
 
-            $this->expireIfNeeded($booking);
+            if ($this->expireLockedBookingIfNeeded($booking)) {
+                return ['expired' => true, 'booking' => $booking->refresh()];
+            }
 
             if ($booking->status !== 'pending_payment') {
-                throw new DomainException('Pesanan ini sudah '.strtolower($booking->statusLabel()).' dan tidak dapat dibayar.');
+                throw new DomainException(
+                    'Pesanan ini sudah '.strtolower($booking->statusLabel())
+                    .' dan tidak dapat dibayar.'
+                );
             }
 
-            $booking->payment()->update(['status' => 'settlement']);
-            $booking->update(['status' => 'paid', 'paid_at' => now()]);
+            $payment = $booking->payment()
+                ->where('status', 'pending')
+                ->lockForUpdate()
+                ->first();
+
+            if (! $payment) {
+                throw new DomainException(
+                    'Pembayaran pending tidak ditemukan untuk pesanan ini.'
+                );
+            }
+
+            $payment->update(['status' => 'settlement']);
+
+            $booking->update([
+                'status' => 'paid',
+                'paid_at' => now(),
+            ]);
 
             $this->issueTickets($booking);
 
-            return $booking->refresh();
+            return ['expired' => false, 'booking' => $booking->refresh()];
         });
+
+        // Exception dilempar setelah transaksi selesai agar status expired
+        // dan pengembalian kuota tidak ikut dibatalkan.
+        if ($result['expired']) {
+            throw new DomainException(
+                'Batas waktu pembayaran telah habis. Pesanan kedaluwarsa.'
+            );
+        }
+
+        return $result['booking'];
     }
 
-    /**
-     * Batalkan pesanan sesuai aturan pada Booking::cancellationBlockedReason().
-     */
     public function cancel(Booking $booking, ?string $reason = null): Booking
     {
-        return DB::transaction(function () use ($booking, $reason) {
-            $booking = Booking::whereKey($booking->id)->lockForUpdate()->firstOrFail();
+        $result = DB::transaction(function () use ($booking, $reason) {
+            $booking = Booking::whereKey($booking->id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-            $this->expireIfNeeded($booking);
+            if ($this->expireLockedBookingIfNeeded($booking)) {
+                return ['expired' => true, 'booking' => $booking->refresh()];
+            }
 
             if ($blocked = $booking->cancellationBlockedReason()) {
                 throw new DomainException($blocked);
@@ -143,19 +261,31 @@ class BookingService
             $booking->update([
                 'status' => 'cancelled',
                 'cancelled_at' => now(),
-                'cancel_reason' => $reason ? Str::limit(trim($reason), 250, '') : null,
+                'cancel_reason' => $reason
+                    ? Str::limit(trim($reason), 250, '')
+                    : null,
             ]);
 
             $booking->tickets()->update(['status' => 'cancelled']);
 
-            // Tagihan yang belum dibayar ditutup. Pengembalian dana untuk pesanan lunas
-            // belum diotomatisasi dan diproses manual oleh pengelola.
             if (! $wasPaid) {
-                $booking->payment()->where('status', 'pending')->update(['status' => 'failed']);
+                $booking->payment()
+                    ->where('status', 'pending')
+                    ->update(['status' => 'failed']);
             }
 
-            return $booking->refresh();
+            $this->releaseQuotaForBooking($booking);
+
+            return ['expired' => false, 'booking' => $booking->refresh()];
         });
+
+        if ($result['expired']) {
+            throw new DomainException(
+                'Batas waktu pembayaran telah habis. Pesanan kedaluwarsa.'
+            );
+        }
+
+        return $result['booking'];
     }
 
     /**
@@ -163,12 +293,35 @@ class BookingService
      */
     public function expireIfNeeded(Booking $booking): bool
     {
-        if ($booking->status !== 'pending_payment' || ! $booking->expires_at || $booking->expires_at->isFuture()) {
+        return DB::transaction(function () use ($booking) {
+            $lockedBooking = Booking::whereKey($booking->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            return $this->expireLockedBookingIfNeeded($lockedBooking);
+        });
+    }
+
+    /**
+     * Dipanggil ketika pesanan sudah dikunci dan berada dalam transaksi.
+     */
+    private function expireLockedBookingIfNeeded(Booking $booking): bool
+    {
+        if (
+            $booking->status !== 'pending_payment'
+            || ! $booking->expires_at
+            || $booking->expires_at->isFuture()
+        ) {
             return false;
         }
 
         $booking->update(['status' => 'expired']);
-        $booking->payment()->where('status', 'pending')->update(['status' => 'expire']);
+
+        $booking->payment()
+            ->where('status', 'pending')
+            ->update(['status' => 'expire']);
+
+        $this->releaseQuotaForBooking($booking);
 
         return true;
     }
@@ -203,6 +356,40 @@ class BookingService
     public function hasAccess(Booking $booking): bool
     {
         return in_array($booking->booking_code, session('booking_access', []), true);
+    }
+
+    /**
+     * Kembalikan kuota untuk setiap slot yang dipesan.
+     * Pemanggil harus sudah berada di dalam transaksi.
+     */
+    private function releaseQuotaForBooking(Booking $booking): void
+    {
+        $quantitiesBySlot = DB::table('booking_items')
+            ->where('booking_id', $booking->id)
+            ->select('visit_slot_id')
+            ->selectRaw('SUM(quantity) AS total_quantity')
+            ->groupBy('visit_slot_id')
+            ->get();
+
+        foreach ($quantitiesBySlot as $item) {
+            $slot = DB::table('visit_slots')
+                ->where('id', $item->visit_slot_id)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $slot) {
+                continue;
+            }
+
+            $newRemaining = min(
+                (int) $slot->quota_capacity,
+                (int) $slot->quota_remaining + (int) $item->total_quantity
+            );
+
+            DB::table('visit_slots')
+                ->where('id', $slot->id)
+                ->update(['quota_remaining' => $newRemaining]);
+        }
     }
 
     private function issueTickets(Booking $booking): void
