@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -28,5 +27,35 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Apakah user memegang role tertentu (kontrak interim Modul 2).
+     * Mapping: 'admin' → 'super_admin', 'tenant' → 'tenant_admin'.
+     */
+    public function hasRole(string $role): bool
+    {
+        $mapped = match ($role) {
+            'admin' => 'super_admin',
+            'tenant' => 'tenant_admin',
+            default => $role,
+        };
+
+        return $this->role === $mapped && $this->isActive();
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->hasRole('admin');
+    }
+
+    public function isTenantOperator(): bool
+    {
+        return $this->hasRole('tenant');
+    }
+
+    public function isActive(): bool
+    {
+        return ($this->status ?? 'active') === 'active';
     }
 }
