@@ -13,15 +13,17 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@banyuwangi.test',
-            'role' => 'tenant_admin',
-        ]);
-
         $demo = [
-            ['name' => 'Super Admin Wisata', 'email' => 'admin@banyuwangi.test', 'role' => 'super_admin'],
-            ['name' => 'Pengelola Destinasi', 'email' => 'pengelola@banyuwangi.test', 'role' => 'tenant_admin'],
+            [
+                'name' => 'Super Admin Wisata',
+                'email' => 'admin@banyuwangi.test',
+                'role' => 'super_admin',
+            ],
+            [
+                'name' => 'Pengelola Destinasi',
+                'email' => 'pengelola@banyuwangi.test',
+                'role' => 'tenant_admin',
+            ],
         ];
 
         foreach ($demo as $row) {
@@ -29,9 +31,7 @@ class DatabaseSeeder extends Seeder
                 ->forceFill([
                     'name' => $row['name'],
                     'role' => $row['role'],
-                    'status' => 'active',
                     'password' => Hash::make('password'),
-                    'email_verified_at' => now(),
                 ])
                 ->save();
         }

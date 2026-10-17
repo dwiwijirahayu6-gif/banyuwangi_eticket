@@ -15,4 +15,8 @@ class TicketType extends Model
     {
         return $this->belongsTo(Destination::class);
     }
+    public function tenant(): BelongsTo
+{
+    return $this->belongsTo(Tenant::class);
+}
 }

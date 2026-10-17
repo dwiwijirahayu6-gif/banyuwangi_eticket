@@ -11,7 +11,9 @@ class Ticket extends Model
 
     protected function casts(): array
     {
-        return ['visit_date' => 'date'];
+        return [
+            'visit_date' => 'date',
+        ];
     }
 
     public function booking(): BelongsTo
@@ -22,5 +24,15 @@ class Ticket extends Model
     public function bookingItem(): BelongsTo
     {
         return $this->belongsTo(BookingItem::class);
+    }
+
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
+    }
+
+    public function verifiedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'verified_by_user_id');
     }
 }
