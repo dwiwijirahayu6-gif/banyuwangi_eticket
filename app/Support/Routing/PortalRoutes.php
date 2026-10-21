@@ -23,13 +23,15 @@ final class PortalRoutes
     }
 
     /**
-     * Portal operator/pengelola wisata (internal). Prefix: tenant/{tenant}
+     * Portal operator/pengelola wisata (internal).
+     * Modul 04: Memakai middleware 'tenant' (SetTenantContext), {tenant:slug}, dan scopeBindings.
      */
     public static function tenant(Closure|string $routes): void
     {
-        Route::middleware(['web', 'auth', 'verified', 'role:tenant'])
-            ->prefix('tenant/{tenant}')
+        Route::middleware(['web', 'auth', 'verified', 'tenant'])
+            ->prefix('tenant/{tenant:code}')
             ->name('tenant.')
+            ->scopeBindings()
             ->group($routes);
     }
 

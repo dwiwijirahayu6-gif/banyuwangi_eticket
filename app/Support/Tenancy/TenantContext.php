@@ -1,39 +1,17 @@
 <?php
-
 namespace App\Support\Tenancy;
 
+use App\Models\Tenant;
 use RuntimeException;
 
-class TenantContext
+final class TenantContext
 {
-    protected ?int $tenantId = null;
+    private ?Tenant $tenant = null;
 
-    public function set(int $tenantId): void
-    {
-        $this->tenantId = $tenantId;
-    }
-
-    public function clear(): void
-    {
-        $this->tenantId = null;
-    }
-
-    public function has(): bool
-    {
-        return $this->tenantId !== null;
-    }
-
-    public function id(): int
-    {
-        if (! $this->has()) {
-            throw new RuntimeException('Tenant context belum tersedia.');
-        }
-
-        return $this->tenantId;
-    }
-
-    public function idOrNull(): ?int
-    {
-        return $this->tenantId;
-    }
+    public function set(Tenant $tenant): void { $this->tenant = $tenant; }
+    public function clear(): void { $this->tenant = null; }
+    public function has(): bool { return $this->tenant !== null; }
+    public function tenant(): Tenant { return $this->tenant ?? throw new RuntimeException('TenantContext belum diisi.'); }
+    public function id(): int { return $this->tenant()->id; }
+    public function idOrNull(): ?int { return $this->tenant?->id; }
 }
