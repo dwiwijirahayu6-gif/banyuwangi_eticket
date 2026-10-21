@@ -8,14 +8,20 @@ use Symfony\Component\HttpFoundation\Response;
 
 final class EnsureUserHasRole
 {
-    public function handle(Request $request, Closure $next, string $role): Response
-    {
-        $user = $request->user();
+    
+public function handle(Request $request, Closure $next, string $role): Response
+{
+    $user = $request->user();
 
-        if ($user === null || ! $user->hasRole($role)) {
-            abort(403);
-        }
+    $hasRole = $role === 'admin'
+        ? in_array($user?->role, ['admin', 'super_admin'], true)
+        : $user?->role === $role;
 
-        return $next($request);
+    if (! $user || ! $hasRole || $user->status !== 'active') {
+        abort(403);
     }
+
+    return $next($request);
+}
+
 }

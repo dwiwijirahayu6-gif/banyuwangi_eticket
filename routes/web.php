@@ -5,10 +5,21 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\DestinationController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PaymentController;
+use App\Models\UserTenantRole;
+use App\Support\Routing\PortalRoutes;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-// Rute Halaman Utama Katalog Wisata Banyuwangi
+// --------------------------------------------------------------------------
+// Portal Pelanggan / Publik (Katalog Wisata Banyuwangi)
+// --------------------------------------------------------------------------
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
+// Alias untuk test suite yang memanggil route('customer.home')
+PortalRoutes::customer(function (): void {
+    Route::get('/', [HomeController::class, 'index'])->name('home');
+});
 
 // Informasi tiket & detail destinasi
 Route::get('/informasi-tiket', [DestinationController::class, 'index'])->name('tickets.info');
@@ -27,10 +38,29 @@ Route::post('/pembatalan', [BookingController::class, 'lookup'])->middleware('th
 Route::get('/pesanan/{booking:booking_code}', [BookingController::class, 'show'])->name('bookings.show');
 Route::post('/pesanan/{booking:booking_code}/batal', [BookingController::class, 'cancel'])->name('bookings.cancel');
 
-// Login sederhana (Modul 2 – interim, akan diganti dengan Breeze/Fortify)
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
+// --------------------------------------------------------------------------
+// Dashboard Router & Fallback (Multitenant & Multi-role)
+// --------------------------------------------------------------------------
+Route::middleware(['auth', 'verified'])->get('/dashboard', function () {
+    $user = Auth::user();
 
+    if ($user && $user->role === 'super_admin') {
+        return redirect()->route('admin.dashboard');
+    }
+
+    if ($user && $user->role === 'tenant') {
+        $tenantRole = UserTenantRole::where('user_id', $user->id)->first();
+        if ($tenantRole && $tenantRole->tenant) {
+            return redirect()->route('tenant.dashboard', ['tenant' => $tenantRole->tenant->slug]);
+        }
+    }
+
+    return view('dashboard');
+})->name('dashboard');
+
+// --------------------------------------------------------------------------
+// Autentikasi User (Login, Register, Logout)
+// --------------------------------------------------------------------------
 Route::get('/login', function () {
     return view('auth.login');
 })->name('login');
@@ -43,11 +73,29 @@ Route::post('/login', function (Request $request) {
 
     if (Auth::attempt($credentials)) {
         $request->session()->regenerate();
+        $user = Auth::user();
+
+        // Redirect otomatis sesuai role setelah login
+        if ($user && $user->role === 'admin') {
+            return redirect()->intended(route('admin.dashboard'));
+        }
+
+        if ($user && $user->role === 'tenant') {
+            $tenantRole = UserTenantRole::where('user_id', $user->id)->first();
+            if ($tenantRole && $tenantRole->tenant) {
+                return redirect()->intended(route('tenant.dashboard', ['tenant' => $tenantRole->tenant->slug]));
+            }
+        }
+
         return redirect()->intended('/');
     }
 
     return back()->withErrors(['email' => 'Email atau password salah.']);
 });
+
+Route::get('/register', function () {
+    return view('auth.register');
+})->name('register');
 
 Route::post('/logout', function (Request $request) {
     Auth::logout();
