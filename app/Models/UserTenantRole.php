@@ -14,4 +14,8 @@ class UserTenantRole extends Model
         'tenant_id',
         'role',
     ];
+        public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }
