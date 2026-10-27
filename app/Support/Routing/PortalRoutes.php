@@ -5,14 +5,18 @@ namespace App\Support\Routing;
 use Closure;
 use Illuminate\Support\Facades\Route;
 
-/**
- * Definisi TUNGGAL grup route per portal (prefix + name + middleware).
- * Konteks: Sistem Pemesanan Tiket Wisata Banyuwangi.
- */
 final class PortalRoutes
 {
     /**
-     * Portal pelanggan (publik, anonim). Prefix: wisata/{destination}
+     * Route publik tanpa prefix portal (misal: scan QR /q/{token}).
+     */
+    public static function web(Closure|string $routes): void
+    {
+        Route::middleware('web')->group($routes);
+    }
+
+    /**
+     * Portal pelanggan (publik, anonim).
      */
     public static function customer(Closure|string $routes): void
     {
@@ -24,19 +28,18 @@ final class PortalRoutes
 
     /**
      * Portal operator/pengelola wisata (internal).
-     * Modul 04: Memakai middleware 'tenant' (SetTenantContext), {tenant:slug}, dan scopeBindings.
      */
     public static function tenant(Closure|string $routes): void
     {
-        Route::middleware(['web', 'auth', 'verified', 'tenant'])
-            ->prefix('tenant/{tenant:code}')
+        // MENGGUNAKAN 'tenant' (SetTenantContext dari Modul 4), bukan 'role:tenant'
+        Route::middleware(['web', 'auth', 'verified', 'tenant']) 
+            ->prefix('tenant/{tenant}')
             ->name('tenant.')
-            ->scopeBindings()
             ->group($routes);
     }
 
     /**
-     * Portal pengelola sistem (internal). Prefix: admin
+     * Portal pengelola sistem (internal).
      */
     public static function admin(Closure|string $routes): void
     {

@@ -23,4 +23,10 @@ class Destination extends Model
     {
         return $this->hasMany(TicketType::class);
     }
+
+    // Relasi ke Model Gate (Gerbang Masuk)
+    public function gates(): HasMany
+    {
+        return $this->hasMany(Gate::class);
+    }
 }
