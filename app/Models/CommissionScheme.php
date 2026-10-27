@@ -16,8 +16,10 @@ class CommissionScheme extends Model
     protected function casts(): array
     {
         return [
-            'percentage' => 'decimal:2',
-            'is_active' => 'boolean',
+            // Ubah nama kolom agar sesuai dengan database
+            'commission_rate' => 'decimal:4',
+            'valid_from' => 'datetime',
+            'valid_to' => 'datetime',
         ];
     }
 

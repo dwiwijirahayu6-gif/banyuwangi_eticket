@@ -1,13 +1,16 @@
-<x-layouts.tenant title="Dashboard">
-    <div class="flex items-center gap-3">
-        <h1 class="text-xl font-semibold">Dashboard Pengelola Wisata</h1>
-        <x-status-badge status="active">aktif</x-status-badge>
+<x-layouts.admin title="Dashboard">
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-xl font-semibold">Dashboard Admin</h1>
+        <a href="{{ route('admin.tenants.index') }}">
+            <x-button>Kelola Destinasi (Tenant)</x-button>
+        </a>
     </div>
-    <p class="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-        Pengelola: <span class="font-mono">{{ $tenant }}</span>
-    </p>
-    <div class="mt-6">
-        <x-empty-state title="Belum ada aktivitas"
-            description="Destinasi, pesanan tiket, dan validasi akan tampil di sini (Modul 7 & 12)." />
+
+    <div class="rounded-xl border border-zinc-200 p-6">
+        <h2 class="font-semibold mb-4">Selamat Datang, {{ auth()->user()->name }}</h2>
+        <p class="text-sm text-zinc-500 mb-4">
+            Ini adalah pusat kendali Sistem Pemesanan Tiket Wisata Banyuwangi. 
+            Gunakan menu di atas untuk mengelola destinasi dan skema komisi.
+        </p>
     </div>
-</x-layouts.tenant>
+</x-layouts.admin>

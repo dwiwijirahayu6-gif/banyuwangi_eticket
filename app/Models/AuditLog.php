@@ -2,19 +2,24 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AuditLog extends Model
 {
-    protected $table = 'audit_logs';
+    use HasFactory;
 
+    // Mengizinkan semua kolom diisi
     protected $guarded = [];
 
-    public const UPDATED_AT = null;
-
-    public function user(): BelongsTo
+    // Konversi tipe data secara otomatis
+    protected function casts(): array
     {
-        return $this->belongsTo(User::class);
+        return [
+            'before' => 'array',
+            'after' => 'array',
+            'metadata' => 'array',
+            'logged_at' => 'datetime',
+        ];
     }
 }
