@@ -12,6 +12,7 @@ use App\Modules\Admin\Services\ManageBankAccount;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class AdminManagementTest extends TestCase
@@ -41,12 +42,21 @@ class AdminManagementTest extends TestCase
 
     public function test_creating_tenant_also_creates_active_commission(): void
     {
+        // Matikan pengiriman email asli saat testing
+        Notification::fake();
+
         $this->actingAs($this->admin());
         
         $this->post(route('admin.tenants.store'), [
             'name' => 'Wisata Kawah Ijen',
             'code' => 'IJEN',
             'commission_rate' => '15',
+            // Tambahan data wajib dari Tahap 8.5:
+            'pic_name' => 'Budi',
+            'pic_email' => 'budi@example.com',
+            'bank_code' => 'BCA',
+            'account_holder' => 'Budi',
+            'account_number' => '1234567890',
         ])->assertRedirect();
 
         $tenant = Tenant::where('code', 'IJEN')->firstOrFail();

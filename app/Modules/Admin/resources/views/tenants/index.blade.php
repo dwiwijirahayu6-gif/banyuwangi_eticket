@@ -1,8 +1,6 @@
 <x-layouts.admin title="Tenant & Skema Komisi">
     @if (session('status'))
-        <div class="mb-4 rounded-lg bg-green-100 px-4 py-2 text-sm text-green-800">
-            {{ session('status') }}
-        </div>
+        <div class="mb-4 rounded-lg bg-green-100 px-4 py-2 text-sm text-green-800">{{ session('status') }}</div>
     @endif
 
     <div class="mb-4 flex items-center justify-between">
@@ -24,7 +22,7 @@
             </thead>
             <tbody>
                 @forelse ($tenants as $tenant)
-                    <tr class="border-t border-zinc-200">
+                    <tr class="border-t border-zinc-200 @if($tenant->status !== 'active') text-zinc-400 @endif">
                         <td class="px-4 py-3 font-medium">{{ $tenant->name }}</td>
                         <td class="px-4 py-3 font-mono text-xs">{{ $tenant->code }}</td>
                         <td class="px-4 py-3">
@@ -33,7 +31,17 @@
                             </x-status-badge>
                         </td>
                         <td class="px-4 py-3 text-right">
-                            <a class="text-sm font-medium underline" href="{{ route('admin.tenants.edit', $tenant) }}">Ubah</a>
+                            <div class="flex items-center justify-end gap-3">
+                                <a class="text-sm font-medium underline" href="{{ route('admin.tenants.edit', $tenant) }}">Ubah Komisi</a>
+                                
+                                <form method="POST" action="{{ route('admin.tenants.status', $tenant) }}">
+                                    @csrf
+                                    <input type="hidden" name="status" value="{{ $tenant->status === 'active' ? 'inactive' : 'active' }}">
+                                    <button type="submit" class="text-sm font-medium text-red-600 hover:underline">
+                                        {{ $tenant->status === 'active' ? 'Nonaktifkan' : 'Aktifkan' }}
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 @empty

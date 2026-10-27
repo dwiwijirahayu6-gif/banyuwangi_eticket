@@ -16,9 +16,16 @@ class StoreTenantRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:120'], // Sesuaikan dengan nama kolom di tabel tenants
+            'name' => ['required', 'string', 'max:120'],
             'code' => ['required', 'alpha_dash', 'max:30', Rule::unique('tenants', 'code')],
             'commission_rate' => ['required', 'numeric', 'between:0,100'],
+            // UC-21: Penanggung Jawab
+            'pic_name' => ['required', 'string', 'max:120'],
+            'pic_email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')],
+            // UC-21: Rekening Bank
+            'bank_code' => ['required', 'string', 'max:20'],
+            'account_holder' => ['required', 'string', 'max:120'],
+            'account_number' => ['required', 'digits_between:6,20'],
         ];
     }
 }
