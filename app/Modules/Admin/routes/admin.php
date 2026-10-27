@@ -2,6 +2,7 @@
 
 use App\Modules\Admin\Http\Controllers\AdminBankAccountController;
 use App\Modules\Admin\Http\Controllers\AdminCommissionController;
+use App\Modules\Admin\Http\Controllers\AdminGateController;
 use App\Modules\Admin\Http\Controllers\AdminTenantController;
 use App\Modules\Admin\Http\Controllers\AdminTenantRoleController;
 use App\Modules\Admin\Http\Controllers\AdminTenantStatusController;
@@ -33,5 +34,11 @@ PortalRoutes::admin(function (): void {
     Route::post('/tenants/{tenant}/bank', [AdminBankAccountController::class, 'store'])->name('tenants.bank.store');
     Route::post('/tenants/{tenant}/bank/{account}/verify', [AdminBankAccountController::class, 'verify'])->name('tenants.bank.verify');
     Route::post('/tenants/{tenant}/bank/{account}/primary', [AdminBankAccountController::class, 'makePrimary'])->name('tenants.bank.primary');
+
+    // 7. Route Manajemen Gerbang & QR (Modul 6)
+    Route::get('/gates', [AdminGateController::class, 'index'])->name('gates.index');
+    Route::post('/gates', [AdminGateController::class, 'store'])->name('gates.store');
+    Route::post('/gates/{gate}/rotate', [AdminGateController::class, 'rotate'])->name('gates.rotate');
+    Route::get('/gates/{gate}/qr', [AdminGateController::class, 'qr'])->name('gates.qr');
     
 });
