@@ -6,12 +6,14 @@ use App\Http\Controllers\DashboardRedirectController;
 use App\Http\Controllers\DestinationController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\Auth\RegisterController;
 use App\Support\Auth\LoginLockout;
 use App\Support\Routing\PortalRoutes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
+
 
 // --------------------------------------------------------------------------
 // 1. Portal Pelanggan / Publik (Katalog Wisata Banyuwangi)
@@ -60,7 +62,7 @@ Route::middleware('guest')->group(function () {
         // Cek apakah akun terkunci (Tahap 8.2)
         if ($lockout->isLocked($email)) {
             throw ValidationException::withMessages([
-                'email' => 'Akun terkunci sementara karena terlalu banyak percobaan gagal. Coba lagi dalam '.$lockout->minutesRemaining($email).' menit.',
+                'email' => 'Akun terkunci sementara karena terlalu banyak percobaan gagal. Coba lagi dalam ' . $lockout->minutesRemaining($email) . ' menit.',
             ]);
         }
 
@@ -68,7 +70,7 @@ Route::middleware('guest')->group(function () {
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
             $lockout->clear($email); // Reset jika berhasil
-            
+
             return redirect()->intended(route('dashboard'));
         }
 
@@ -78,9 +80,14 @@ Route::middleware('guest')->group(function () {
         return back()->withErrors(['email' => 'Surel atau kata sandi tidak sesuai.']);
     });
 
-    Route::get('/register', function () {
-        return view('auth.register');
-    })->name('register');
+    // Registrasi pelanggan
+    Route::get('/register', [RegisterController::class, 'create'])
+        ->middleware('guest')
+        ->name('register');
+
+    Route::post('/register', [RegisterController::class, 'store'])
+        ->middleware('guest')
+        ->name('register.store');
 });
 
 Route::post('/logout', function (Request $request) {
