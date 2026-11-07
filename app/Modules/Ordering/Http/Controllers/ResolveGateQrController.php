@@ -14,7 +14,7 @@ final class ResolveGateQrController extends Controller
     public function __invoke(Request $request, string $token): RedirectResponse
     {
         $result = $this->resolver->resolve($token);
-        
+
         // Jika token tidak valid, tampilkan 404
         abort_if($result === null, 404);
 

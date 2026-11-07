@@ -20,6 +20,7 @@ final class AdminBankAccountController extends Controller
     public function store(StoreBankAccountRequest $request, Tenant $tenant): RedirectResponse
     {
         $this->service->store($tenant, $request->validated());
+
         return redirect()->route('admin.tenants.edit', $tenant)->with('status', 'Rekening ditambahkan (menunggu verifikasi).');
     }
 
@@ -27,8 +28,9 @@ final class AdminBankAccountController extends Controller
     {
         $this->authorize('manageBank', $tenant);
         abort_unless($account->tenant_id === $tenant->id, 404);
-        
+
         $this->service->verify($account, $request->boolean('approve'));
+
         return redirect()->route('admin.tenants.edit', $tenant)->with('status', 'Status rekening diperbarui.');
     }
 
@@ -36,8 +38,9 @@ final class AdminBankAccountController extends Controller
     {
         $this->authorize('manageBank', $tenant);
         abort_unless($account->tenant_id === $tenant->id, 404);
-        
+
         $this->service->makePrimary($account);
+
         return redirect()->route('admin.tenants.edit', $tenant)->with('status', 'Rekening utama diperbarui.');
     }
 }

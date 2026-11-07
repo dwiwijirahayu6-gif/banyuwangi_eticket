@@ -17,11 +17,14 @@ final class TenantTicketController extends Controller
     {
         // Global scope memfilter ke tenant aktif dari TenantContext
         $tickets = TicketType::query()->orderBy('name')->get();
-        return response()->json(['tenant' => $tenant->code, 'tickets' => $tickets]);    }
+
+        return response()->json(['tenant' => $tenant->code, 'tickets' => $tickets]);
+    }
 
     public function show(Tenant $tenant, TicketType $ticketType): JsonResponse
     {
         $this->authorize('view', $ticketType);
+
         return response()->json($ticketType);
     }
 

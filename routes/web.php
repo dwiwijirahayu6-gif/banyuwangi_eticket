@@ -1,19 +1,18 @@
 <?php
 
+use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\DashboardRedirectController;
 use App\Http\Controllers\DestinationController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PaymentController;
-use App\Http\Controllers\Auth\RegisterController;
 use App\Support\Auth\LoginLockout;
 use App\Support\Routing\PortalRoutes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
-
 
 // --------------------------------------------------------------------------
 // 1. Portal Pelanggan / Publik (Katalog Wisata Banyuwangi)
@@ -62,7 +61,7 @@ Route::middleware('guest')->group(function () {
         // Cek apakah akun terkunci (Tahap 8.2)
         if ($lockout->isLocked($email)) {
             throw ValidationException::withMessages([
-                'email' => 'Akun terkunci sementara karena terlalu banyak percobaan gagal. Coba lagi dalam ' . $lockout->minutesRemaining($email) . ' menit.',
+                'email' => 'Akun terkunci sementara karena terlalu banyak percobaan gagal. Coba lagi dalam '.$lockout->minutesRemaining($email).' menit.',
             ]);
         }
 
@@ -94,13 +93,14 @@ Route::post('/logout', function (Request $request) {
     Auth::logout();
     $request->session()->invalidate();
     $request->session()->regenerateToken();
+
     return redirect('/');
 })->name('logout');
 
 // --------------------------------------------------------------------------
 // 3. Dashboard Router (Tahap 8.3)
 // --------------------------------------------------------------------------
-// Ini menggantikan fungsi closure lama. Semua logika redirect per-role 
+// Ini menggantikan fungsi closure lama. Semua logika redirect per-role
 // sekarang ditangani oleh DashboardRedirectController.
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', DashboardRedirectController::class)->name('dashboard');

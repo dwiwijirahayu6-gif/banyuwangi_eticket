@@ -14,7 +14,7 @@ final class ManageBankAccount
     public function store(Tenant $tenant, array $data): TenantBankAccount
     {
         return DB::transaction(function () use ($tenant, $data): TenantBankAccount {
-            $account = new TenantBankAccount();
+            $account = new TenantBankAccount;
             $account->tenant_id = $tenant->id;
             $account->bank_code = $data['bank_code'];
             $account->account_holder = $data['account_holder'];
@@ -46,7 +46,7 @@ final class ManageBankAccount
                 ->where('tenant_id', $account->tenant_id)
                 ->where('id', '!=', $account->id)
                 ->update(['is_primary' => false]);
-                
+
             $account->update(['is_primary' => true]);
         });
     }

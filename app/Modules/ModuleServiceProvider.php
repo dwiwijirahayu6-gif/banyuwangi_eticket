@@ -28,7 +28,7 @@ abstract class ModuleServiceProvider extends ServiceProvider
         $path = $this->modulePath();
 
         $this->loadViewsFrom($path.'/resources/views', $this->moduleAlias());
-        
+
         if (class_exists(Livewire::class)) {
             Livewire::addNamespace(
                 namespace: $this->moduleAlias(),

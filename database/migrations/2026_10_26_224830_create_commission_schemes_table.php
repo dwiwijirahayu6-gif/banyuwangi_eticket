@@ -9,7 +9,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Schema::hasTable('commission_schemes')) {
+        if (! Schema::hasTable('commission_schemes')) {
             Schema::create('commission_schemes', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('tenant_id')->nullable()->constrained()->cascadeOnDelete();

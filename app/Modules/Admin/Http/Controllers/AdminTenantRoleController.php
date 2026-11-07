@@ -20,14 +20,14 @@ final class AdminTenantRoleController extends Controller
     public function store(Request $request, Tenant $tenant): RedirectResponse
     {
         $this->authorize('assignRole', $tenant);
-        
+
         $data = $request->validate([
             'email' => ['required', 'email'],
             'role' => ['required', 'in:owner,operator,cashier,manager'],
         ]);
 
         $user = User::query()->where('email', $data['email'])->firstOrFail();
-        
+
         $this->service->assign($tenant, $user, $data['role']);
 
         return redirect()->route('admin.tenants.edit', $tenant)->with('status', 'Role ditugaskan.');
@@ -36,9 +36,9 @@ final class AdminTenantRoleController extends Controller
     public function destroy(Request $request, Tenant $tenant, User $user): RedirectResponse
     {
         $this->authorize('assignRole', $tenant);
-        
+
         $data = $request->validate(['role' => ['required', 'in:owner,operator,cashier,manager']]);
-        
+
         try {
             $this->service->remove($tenant, $user, $data['role']);
         } catch (DomainException $e) {

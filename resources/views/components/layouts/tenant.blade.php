@@ -11,8 +11,8 @@
                class="fixed inset-y-0 left-0 z-20 w-64 transform border-r border-zinc-200 bg-white p-4 transition-transform duration-200 lg:static lg:translate-x-0 dark:border-zinc-800 dark:bg-zinc-900">
             <div class="mb-6 text-lg font-semibold">Pengelola Wisata</div>
             <nav class="flex flex-col gap-1 text-sm">
-                <span class="rounded-lg bg-zinc-100 px-3 py-2 font-medium dark:bg-zinc-800">Dashboard</span>
-                <span class="px-3 py-2 text-zinc-400">Destinasi (Modul 7)</span>
+                <a href="{{ route('tenant.dashboard', ['tenant' => request()->route('tenant') ?? 'demo']) }}" class="rounded-lg px-3 py-2 font-medium hover:bg-zinc-100 dark:hover:bg-zinc-800">Dashboard</a>
+                <a href="{{ route('tenant.ticket-manager', ['tenant' => request()->route('tenant') ?? 'demo']) }}" class="rounded-lg bg-zinc-100 px-3 py-2 font-medium dark:bg-zinc-800">Kelola Tiket (Modul 7)</a>
                 <span class="px-3 py-2 text-zinc-400">Pesanan Tiket (Modul 12)</span>
             </nav>
         </aside>

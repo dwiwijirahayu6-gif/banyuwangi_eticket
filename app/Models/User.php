@@ -2,8 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\Tenant;
-use App\Models\UserTenantRole;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;

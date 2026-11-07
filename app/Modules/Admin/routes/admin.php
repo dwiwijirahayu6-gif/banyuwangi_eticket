@@ -10,7 +10,7 @@ use App\Support\Routing\PortalRoutes;
 use Illuminate\Support\Facades\Route;
 
 PortalRoutes::admin(function (): void {
-    
+
     // 1. Route bawaan dari Modul 2
     Route::view('/dashboard', 'admin.dashboard')->name('dashboard');
 
@@ -40,5 +40,5 @@ PortalRoutes::admin(function (): void {
     Route::post('/gates', [AdminGateController::class, 'store'])->name('gates.store');
     Route::post('/gates/{gate}/rotate', [AdminGateController::class, 'rotate'])->name('gates.rotate');
     Route::get('/gates/{gate}/qr', [AdminGateController::class, 'qr'])->name('gates.qr');
-    
+
 });
