@@ -40,17 +40,19 @@ new class extends Component
     }
 
     #[Computed]
-    public function destination(): ?Destination
-    {
-        if (empty($this->canteenSlug)) {
-            return Destination::query()->first();
-        }
-
-        return Destination::query()
-            ->where('slug', $this->canteenSlug)
-            ->orWhereHas('tenant', fn ($t) => $t->where('code', $this->canteenSlug)->orWhere('status', 'active'))
-            ->first();
+public function destination(): ?Destination
+{
+    if ($this->canteenSlug === '') {
+        return null;
     }
+
+    return Destination::query()
+        ->where('slug', $this->canteenSlug)
+        ->whereHas('tenant', function ($query) {
+            $query->where('status', 'active');
+        })
+        ->first();
+}
 
     #[Computed]
     public function canteen(): ?Destination
@@ -58,14 +60,30 @@ new class extends Component
         return $this->destination();
     }
 
-    #[Computed]
-    public function groups(): \Illuminate\Support\Collection
-    {
-        $query = app(PublicCatalogQuery::class);
-        $tickets = $query->browseAll(null, $this->search, $this->tenantId, $this->category);
+   #[Computed]
+public function groups(): \Illuminate\Support\Collection
+{
+    $destination = $this->destination();
 
-        return $tickets->groupBy(fn ($t) => $t->destination_id ?? $t->tenant_id);
+    // Jika slug diberikan tetapi destinasi tidak ditemukan,
+    // tampilkan katalog kosong.
+    if ($this->canteenSlug !== '' && $destination === null) {
+        return collect();
     }
+
+    // Jika slug kosong, ambil tiket dari seluruh destinasi aktif.
+    $tickets = app(PublicCatalogQuery::class)->browseAll(
+        $destination,
+        $this->search,
+        $this->tenantId,
+        $this->category
+    );
+
+    // Kelompokkan tiket berdasarkan destinasi.
+    return $tickets->groupBy(
+        fn ($ticket) => $ticket->destination_id
+    );
+}
 
     #[Computed]
     public function tenants(): \Illuminate\Support\Collection
@@ -74,10 +92,11 @@ new class extends Component
     }
 
     #[Computed]
-    public function categories(): \Illuminate\Support\Collection
-    {
-        return app(PublicCatalogQuery::class)->categoryNames();
-    }
+public function categories(): \Illuminate\Support\Collection
+{
+    return app(PublicCatalogQuery::class)
+        ->categoryNames($this->destination());
+}
 };
 ?>
 

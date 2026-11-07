@@ -109,7 +109,7 @@ class CatalogBrowseUseCaseTest extends TestCase
         ]);
 
         $booking = Booking::create([
-            'booking_code' => 'BWX-'.Str::upper(Str::random(6)),
+            'booking_code' => 'BWX-' . Str::upper(Str::random(6)),
             'customer_name' => 'Wisatawan Antrean',
             'customer_email' => 'wisatawan@example.com',
             'customer_phone' => '081234567890',
@@ -127,9 +127,19 @@ class CatalogBrowseUseCaseTest extends TestCase
             'subtotal' => 50000,
         ]);
 
-        // Antrean 2 tiket x 4 mnt / kapasitas 2 = 4 menit antrean. Ditambah 6 menit = 10 mnt (10-15 mnt)
-        $this->assertSame(4.0, $estimator->queueMinutes($dest));
-        $this->assertSame(['low' => 10, 'high' => 15], $estimator->forDestination($dest));
-        $this->assertSame('± 10–15 mnt', $estimator->label($dest));
+        // Antrean 2 tiket x 6 mnt / kapasitas 2 = 6 menit antrean.
+        // Ditambah 6 menit pelayanan tiket = 12 menit (12-18 mnt).
+
+        $this->assertSame(6.0, $estimator->queueMinutes($dest));
+
+        $this->assertSame(
+            ['low' => 12, 'high' => 18],
+            $estimator->forDestination($dest)
+        );
+
+        $this->assertSame(
+            '± 12–18 mnt',
+            $estimator->label($dest)
+        );
     }
 }
