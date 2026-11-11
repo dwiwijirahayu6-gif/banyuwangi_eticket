@@ -30,6 +30,7 @@ final class AuditLogger
         foreach (['account_number_cipher', 'account_number', 'password', 'password_hash'] as $key) {
             unset($data[$key]);
         }
+
         return $data;
     }
 }

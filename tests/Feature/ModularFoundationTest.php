@@ -60,7 +60,8 @@ class ModularFoundationTest extends TestCase
         $this->actingAs($user);
         $tenant = $this->tenantWithMember($user);
         $this->get(route('tenant.dashboard', ['tenant' => $tenant->code]))
-    ->assertOk();    }
+            ->assertOk();
+    }
 
     public function test_admin_can_open_admin_dashboard(): void
     {
@@ -69,47 +70,47 @@ class ModularFoundationTest extends TestCase
     }
 
     public function test_non_member_is_forbidden_on_tenant_and_admin_contexts(): void
-{
-    $this->actingAs($this->user('tenant'));
-    $this->get(route('admin.dashboard'))->assertForbidden();
+    {
+        $this->actingAs($this->user('tenant'));
+        $this->get(route('admin.dashboard'))->assertForbidden();
 
-    $admin = $this->user('admin');
-    $this->actingAs($admin);
+        $admin = $this->user('admin');
+        $this->actingAs($admin);
 
-    $tenant = Tenant::factory()->create();
+        $tenant = Tenant::factory()->create();
 
-    $this->get(route('tenant.dashboard', [
-        'tenant' => $tenant->code,
-    ]))->assertForbidden();
-}
+        $this->get(route('tenant.dashboard', [
+            'tenant' => $tenant->code,
+        ]))->assertForbidden();
+    }
 
     public function test_user_without_role_is_forbidden_on_internal_contexts(): void
-{
-    $user = User::factory()->create([
-        'role' => 'super_admin',
-        'status' => 'active',
-    ]);
+    {
+        $user = User::factory()->create([
+            'role' => 'super_admin',
+            'status' => 'active',
+        ]);
 
-    $this->actingAs($user);
+        $this->actingAs($user);
 
-    $tenant = Tenant::factory()->create();
+        $tenant = Tenant::factory()->create();
 
-    $this->get(route('tenant.dashboard', [
-        'tenant' => $tenant->code,
-    ]))->assertForbidden();
-}
+        $this->get(route('tenant.dashboard', [
+            'tenant' => $tenant->code,
+        ]))->assertForbidden();
+    }
 
     public function test_suspended_tenant_is_forbidden_even_for_member(): void
-{
-    $user = $this->user('tenant');
-    $this->actingAs($user);
+    {
+        $user = $this->user('tenant');
+        $this->actingAs($user);
 
-    $tenant = $this->tenantWithMember($user, status: 'suspended');
+        $tenant = $this->tenantWithMember($user, status: 'suspended');
 
-    $this->get(route('tenant.dashboard', [
-        'tenant' => $tenant->code,
-    ]))->assertForbidden();
-}
+        $this->get(route('tenant.dashboard', [
+            'tenant' => $tenant->code,
+        ]))->assertForbidden();
+    }
 
     public function test_all_six_module_providers_are_registered(): void
     {

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\DashboardRedirectController;
@@ -68,7 +69,7 @@ Route::middleware('guest')->group(function () {
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
             $lockout->clear($email); // Reset jika berhasil
-            
+
             return redirect()->intended(route('dashboard'));
         }
 
@@ -78,22 +79,28 @@ Route::middleware('guest')->group(function () {
         return back()->withErrors(['email' => 'Surel atau kata sandi tidak sesuai.']);
     });
 
-    Route::get('/register', function () {
-        return view('auth.register');
-    })->name('register');
+    // Registrasi pelanggan
+    Route::get('/register', [RegisterController::class, 'create'])
+        ->middleware('guest')
+        ->name('register');
+
+    Route::post('/register', [RegisterController::class, 'store'])
+        ->middleware('guest')
+        ->name('register.store');
 });
 
 Route::post('/logout', function (Request $request) {
     Auth::logout();
     $request->session()->invalidate();
     $request->session()->regenerateToken();
+
     return redirect('/');
 })->name('logout');
 
 // --------------------------------------------------------------------------
 // 3. Dashboard Router (Tahap 8.3)
 // --------------------------------------------------------------------------
-// Ini menggantikan fungsi closure lama. Semua logika redirect per-role 
+// Ini menggantikan fungsi closure lama. Semua logika redirect per-role
 // sekarang ditangani oleh DashboardRedirectController.
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', DashboardRedirectController::class)->name('dashboard');

@@ -15,13 +15,14 @@ class CommissionScheduleBoundaryTest extends TestCase
     use RefreshDatabase;
 
     private Tenant $tenant;
+
     private CarbonImmutable $switchAt;
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->tenant = Tenant::factory()->create();
-        
+
         CommissionScheme::create([
             'tenant_id' => $this->tenant->id,
             'commission_rate' => 0.15,

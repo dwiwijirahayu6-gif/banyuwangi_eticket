@@ -9,6 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Route as RoutingRoute;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
+use Illuminate\View\FileViewFinder;
 use Livewire\Livewire;
 use Tests\Fixtures\Modules\Probe\ProbeServiceProvider;
 use Tests\TestCase;
@@ -48,7 +49,7 @@ class ModuleConventionTest extends TestCase
 
     public function test_every_module_registers_its_own_view_namespace(): void
     {
-        /** @var \Illuminate\View\FileViewFinder $finder */
+        /** @var FileViewFinder $finder */
         $finder = View::getFinder();
         $hints = $finder->getHints();
 

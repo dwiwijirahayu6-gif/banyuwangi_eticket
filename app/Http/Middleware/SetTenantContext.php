@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Middleware;
 
 use App\Models\Tenant;
@@ -14,9 +15,16 @@ final class SetTenantContext
     {
         $tenant = $request->route('tenant');
         if (! $tenant instanceof Tenant) {
-            $tenant = Tenant::query()->where('code', (string) $tenant)->first();        }
-        if (! $tenant instanceof Tenant) { abort(404); }
-        if (! $tenant->isActive()) { abort(403); }
+            $tenant = Tenant::query()->where('code', (string) $tenant)
+                ->orWhere('id', (string) $tenant)
+                ->first();
+        }
+        if (! $tenant instanceof Tenant) {
+            abort(404);
+        }
+        if (! $tenant->isActive()) {
+            abort(403);
+        }
 
         $user = $request->user();
         if ($user === null || $user->status !== 'active') {
@@ -28,7 +36,9 @@ final class SetTenantContext
             ->where('tenant_id', $tenant->id)
             ->exists();
 
-        if (! $isMember) { abort(403); }
+        if (! $isMember) {
+            abort(403);
+        }
 
         $context = app(TenantContext::class);
         $context->set($tenant);
