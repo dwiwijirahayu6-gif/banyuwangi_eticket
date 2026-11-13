@@ -16,6 +16,7 @@ final readonly class CartLine
         public string $lineKey,
         public int $ticketTypeId,
         public int $tenantId,
+        public int $visitSlotId, // <--- TAMBAHAN BARU UNTUK MODUL 9
         public string $destinationName,
         public string $ticketTypeName,
         public string $visitDate,
