@@ -30,4 +30,11 @@
             description="Kembali ke daftar dan klik Terbitkan/Regenerasi untuk memperoleh QR." />
     @endif
     <div class="mt-6 print:hidden"><a class="text-sm font-medium underline" href="{{ route('admin.gates.index') }}">← Kembali ke daftar gerbang</a></div>
+        {{-- Link testing sementara --}}
+    @if($url)
+    <div class="mt-6 p-4 rounded-lg bg-zinc-100 break-all print:hidden">
+        <p class="text-sm font-semibold mb-1">URL untuk Simulasi Scan:</p>
+        <a href="{{ $url }}" target="_blank" class="text-blue-600 underline">{{ $url }}</a>
+    </div>
+    @endif
 </x-layouts.admin>
