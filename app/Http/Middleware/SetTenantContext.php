@@ -27,14 +27,14 @@ final class SetTenantContext
         }
 
         $user = $request->user();
-        if ($user === null || $user->status !== 'active') {
+        if ($user === null || ! $user->isActive()) {
             abort(403);
         }
 
         $isMember = UserTenantRole::query()
             ->where('user_id', $user->id)
             ->where('tenant_id', $tenant->id)
-            ->exists();
+            ->exists() || (! empty($user->tenant_id) && (int) $user->tenant_id === (int) $tenant->id);
 
         if (! $isMember) {
             abort(403);

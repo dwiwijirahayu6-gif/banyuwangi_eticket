@@ -1,10 +1,17 @@
 <?php
 
-use App\Models\Tenant;
+use App\Http\Controllers\TenantProfileController;
+use App\Modules\Catalog\Http\Controllers\TenantDashboardController;
 use App\Support\Routing\PortalRoutes;
 use Illuminate\Support\Facades\Route;
 
 PortalRoutes::tenant(function (): void {
-    Route::get('/dashboard', fn (Tenant $tenant) => response('Tenant Dashboard'))
+    Route::get('/dashboard', [TenantDashboardController::class, 'index'])
         ->name('dashboard');
+
+    Route::get('/profil', [TenantProfileController::class, 'index'])
+        ->name('profil');
+
+    Route::put('/profil', [TenantProfileController::class, 'update'])
+        ->name('profil.update');
 });

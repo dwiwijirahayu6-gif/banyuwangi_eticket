@@ -15,6 +15,13 @@ class Destination extends Model
 
     public const UPDATED_AT = null;
 
+    protected function casts(): array
+    {
+        return [
+            'gallery' => 'array',
+        ];
+    }
+
     // Relasi ke Model Tenant (Pengelola)
     public function tenant(): BelongsTo
     {

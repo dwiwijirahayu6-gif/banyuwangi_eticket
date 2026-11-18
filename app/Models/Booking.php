@@ -74,6 +74,11 @@ class Booking extends Model
         return $this->cancellationBlockedReason() === null;
     }
 
+    public function resolveRouteBinding($value, $field = null)
+    {
+        return $this->where('booking_code', $value)->orWhere('id', $value)->first() ?? abort(404);
+    }
+
     private function paidCancellationBlockedReason(): ?string
     {
         if ($this->tickets()->where('status', 'checked_in')->exists()) {
