@@ -29,10 +29,12 @@ return new class extends Migration
         });
 
         // Konversi persentase lama ke format desimal.
-        DB::table('commission_schemes')->update([
-            'commission_rate' => DB::raw('percentage / 100'),
-            'valid_from' => DB::raw('created_at'),
-        ]);
+        if (Schema::hasColumn('commission_schemes', 'percentage')) {
+            DB::table('commission_schemes')->update([
+                'commission_rate' => DB::raw('percentage / 100'),
+                'valid_from' => DB::raw('created_at'),
+            ]);
+        }
     }
 
     public function down(): void

@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 final class ChangeTenantStatus
 {
-    public const ALLOWED = ['active', 'inactive'];
+    public const ALLOWED = ['active', 'inactive', 'suspended'];
 
     public function __construct(private AuditLogger $audit) {}
 
@@ -28,8 +28,20 @@ final class ChangeTenantStatus
 
             $locked->update(['status' => $status]);
 
-            $this->audit->record('tenant', $locked->id, $status === 'active' ? 'activated' : 'deactivated',
-                ['status' => $before], ['status' => $status], $locked->id);
+            $actionName = match ($status) {
+                'active' => 'activated',
+                'suspended' => 'suspended',
+                default => 'deactivated',
+            };
+
+            $this->audit->record(
+                'tenant',
+                $locked->id,
+                $actionName,
+                ['status' => $before],
+                ['status' => $status],
+                $locked->id
+            );
 
             return $locked;
         });

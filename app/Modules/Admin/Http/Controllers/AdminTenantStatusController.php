@@ -18,12 +18,12 @@ final class AdminTenantStatusController extends Controller
         $this->authorize('update', $tenant);
 
         $data = $request->validate([
-            'status' => ['required', 'in:active,inactive'],
+            'status' => ['required', 'in:active,inactive,suspended'],
         ]);
 
         $service->handle($tenant, $data['status']);
 
         return redirect()->route('admin.tenants.index')
-            ->with('status', "Tenant {$tenant->name} berhasil diubah menjadi {$data['status']}.");
+            ->with('status', "Status tenant {$tenant->name} berhasil diubah menjadi {$data['status']}.");
     }
 }

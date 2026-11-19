@@ -90,6 +90,10 @@ new class extends Component
         <div class="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
             <div class="p-4 border-b border-zinc-200 bg-zinc-50 flex justify-between items-center">
                 <h3 class="font-bold text-zinc-800">Pengelola Baru</h3>
+                <div class="flex items-center gap-3">
+                    <a href="{{ route('admin.tenants.index') }}" class="text-xs text-zinc-500 hover:text-zinc-800">Lihat Semua</a>
+                    <a href="{{ route('admin.tenants.create') }}" class="text-xs text-emerald-600 font-semibold hover:underline">+ Tambah Wisata</a>
+                </div>
             </div>
             <div class="divide-y divide-zinc-100">
                 @forelse($this->recentTenants as $tenant)
