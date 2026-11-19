@@ -1,16 +1,9 @@
-<x-layouts.admin title="Dashboard">
-    <div class="flex items-center justify-between mb-6">
-        <h1 class="text-xl font-semibold">Dashboard Admin</h1>
-        <a href="{{ route('admin.tenants.index') }}">
-            <x-button>Kelola Destinasi (Tenant)</x-button>
-        </a>
+<x-layouts.admin title="Super Admin Dashboard">
+    <div class="mb-6">
+        <h1 class="text-2xl font-extrabold text-zinc-900">Selamat Datang, Super Admin! 👋</h1>
+        <p class="text-zinc-500">Pantau seluruh aktivitas destinasi wisata dan pesanan tiket Banyuwangi.</p>
     </div>
 
-    <div class="rounded-xl border border-zinc-200 p-6">
-        <h2 class="font-semibold mb-4">Selamat Datang, {{ auth()->user()->name }}</h2>
-        <p class="text-sm text-zinc-500 mb-4">
-            Ini adalah pusat kendali Sistem Pemesanan Tiket Wisata Banyuwangi. 
-            Gunakan menu di atas untuk mengelola destinasi dan skema komisi.
-        </p>
-    </div>
+    {{-- Komponen Livewire Dashboard --}}
+    <livewire:admin::super-admin-dashboard />
 </x-layouts.admin>
