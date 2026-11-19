@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CustomerSession extends Model
 {
-    use HasUlids; 
+    use HasUlids;
 
     protected $fillable = ['status'];
 

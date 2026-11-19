@@ -227,6 +227,8 @@ class BookingService
 
             $this->issueTickets($booking);
 
+            app(LedgerService::class)->recordBookingSales($booking);
+
             return ['expired' => false, 'booking' => $booking->refresh()];
         });
 

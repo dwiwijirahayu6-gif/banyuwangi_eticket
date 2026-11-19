@@ -22,20 +22,20 @@ final class ResolveGateScan
         }
 
         $gate = $qr->gate;
-        
+
         // 3. Validasi gerbang aktif
         if ($gate === null || ! $gate->isActive()) {
             return null;
         }
 
         $destination = $gate->destination;
-        if (!$destination) {
+        if (! $destination) {
             return null;
         }
 
         // 4. Buat Sesi Pelanggan (Customer Session)
         $sessionToken = OpaqueToken::issue(32);
-        $session = new CustomerSession();
+        $session = new CustomerSession;
         $session->destination_id = $destination->id;
         $session->gate_id = $gate->id;
         $session->qr_token_id = $qr->id;
@@ -47,7 +47,7 @@ final class ResolveGateScan
         return [
             'session' => $session,
             'plain' => $sessionToken['plain'],
-            'destination' => $destination
+            'destination' => $destination,
         ];
     }
 }

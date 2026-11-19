@@ -5,8 +5,8 @@ namespace App\Modules\Admin\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Destination;
 use App\Models\Gate;
-use App\Modules\Admin\Services\QrTokenService;
-use App\Modules\Admin\Services\QrCodeSvg; // Tambahan Import
+use App\Modules\Admin\Services\QrCodeSvg;
+use App\Modules\Admin\Services\QrTokenService; // Tambahan Import
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
@@ -18,14 +18,14 @@ final class AdminGateController extends Controller
 
     // Tambahkan QrCodeSvg di construct
     public function __construct(
-        private QrTokenService $qr, 
+        private QrTokenService $qr,
         private QrCodeSvg $svg
     ) {}
 
     public function index(): View
     {
         $this->authorize('viewAny', Gate::class);
-        
+
         // Ambil semua gerbang dari semua destinasi
         $gates = Gate::with('destination')->orderBy('id', 'desc')->get();
         $destinations = Destination::all();
@@ -59,7 +59,7 @@ final class AdminGateController extends Controller
     {
         $this->authorize('rotateQr', $gate);
         $plain = $this->qr->rotate($gate);
-        
+
         return redirect()->route('admin.gates.qr', $gate)->with('qr_plain', $plain);
     }
 
@@ -67,8 +67,8 @@ final class AdminGateController extends Controller
     {
         $this->authorize('rotateQr', $gate);
         $plain = session('qr_plain');
-        $url = is_string($plain) ? url('/q/' . $plain) : null;
-        
+        $url = is_string($plain) ? url('/q/'.$plain) : null;
+
         // Proses URL menjadi gambar SVG QR Code
         $svg = $url !== null ? $this->svg->render($url) : null;
 

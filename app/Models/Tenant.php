@@ -35,7 +35,22 @@ class Tenant extends Model
     }
 
     public function isActive(): bool
-{
-    return $this->status === 'active';
-}
+    {
+        return $this->status === 'active';
+    }
+
+    public function getDisplayNameAttribute(): string
+    {
+        return $this->attributes['display_name'] ?? $this->name;
+    }
+
+    public function getSlugAttribute(): string
+    {
+        return $this->attributes['slug'] ?? $this->code;
+    }
+
+    public function resolveRouteBinding($value, $field = null)
+    {
+        return $this->where('code', $value)->orWhere('id', $value)->first() ?? abort(404);
+    }
 }

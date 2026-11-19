@@ -19,14 +19,14 @@ final class CreateTenant
     {
         return DB::transaction(function () use ($data): Tenant {
             // 1. Buat Tenant
-            $tenant = new Tenant();
+            $tenant = new Tenant;
             $tenant->name = $data['name'];
             $tenant->code = $data['code'];
             $tenant->status = 'active';
             $tenant->save();
 
             // 2. Buat Komisi Awal
-            $commission = new CommissionScheme();
+            $commission = new CommissionScheme;
             $commission->tenant_id = $tenant->id;
             $commission->commission_rate = (float) $data['commission_rate'] / 100;
             $commission->valid_from = now();
@@ -34,11 +34,11 @@ final class CreateTenant
             $commission->save();
 
             // 3. Buat Akun Owner (PIC)
-            $owner = new User();
+            $owner = new User;
             $owner->name = $data['pic_name'];
             $owner->email = $data['pic_email'];
             $owner->password = bcrypt(Str::password(32)); // Password acak aman
-            $owner->role = 'tenant_admin'; 
+            $owner->role = 'tenant_admin';
             $owner->status = 'active';
             $owner->email_verified_at = now();
             $owner->save();
@@ -47,11 +47,11 @@ final class CreateTenant
             UserTenantRole::create([
                 'user_id' => $owner->id,
                 'tenant_id' => $tenant->id,
-                'role' => 'owner'
+                'role' => 'owner',
             ]);
 
             // 4. Buat Rekening Bank
-            $account = new TenantBankAccount();
+            $account = new TenantBankAccount;
             $account->tenant_id = $tenant->id;
             $account->bank_code = $data['bank_code'];
             $account->account_holder = $data['account_holder'];

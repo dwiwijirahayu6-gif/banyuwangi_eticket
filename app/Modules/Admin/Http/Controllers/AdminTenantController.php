@@ -23,12 +23,14 @@ final class AdminTenantController extends Controller
     {
         $this->authorize('viewAny', Tenant::class);
         $tenants = Tenant::orderBy('id', 'desc')->get();
+
         return view('admin::tenants.index', compact('tenants'));
     }
 
     public function create(): View
     {
         $this->authorize('create', Tenant::class);
+
         return view('admin::tenants.create');
     }
 
@@ -44,14 +46,14 @@ final class AdminTenantController extends Controller
     public function edit(Tenant $tenant): View
     {
         $this->authorize('update', $tenant);
-        
+
         $members = UserTenantRole::with('user')->where('tenant_id', $tenant->id)->get();
-        
+
         $commissions = CommissionScheme::query()
             ->where('tenant_id', $tenant->id)
             ->orderByDesc('valid_from')
             ->get();
-            
+
         $activeCommission = $commissions->whereNull('valid_to')->first();
 
         // Ambil data rekening bank

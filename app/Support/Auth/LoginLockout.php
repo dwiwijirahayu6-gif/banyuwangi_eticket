@@ -8,7 +8,9 @@ use Illuminate\Support\Str;
 final class LoginLockout
 {
     public const MAX_FAILURES = 5;
+
     public const FAILURE_WINDOW_SECONDS = 600; // 10 menit
+
     public const LOCK_SECONDS = 900; // 15 menit
 
     public function isLocked(string $email): bool
@@ -34,11 +36,13 @@ final class LoginLockout
 
         if ($window['count'] < self::MAX_FAILURES) {
             Cache::put($this->counterKey($email), $window, self::FAILURE_WINDOW_SECONDS);
+
             return false;
         }
 
         Cache::put($this->lockKey($email), $now + self::LOCK_SECONDS, self::LOCK_SECONDS);
         Cache::forget($this->counterKey($email));
+
         return true;
     }
 

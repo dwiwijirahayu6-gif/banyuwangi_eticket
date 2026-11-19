@@ -23,7 +23,7 @@ final class ChangeCommissionSchedule
                 ->first();
 
             if ($active !== null && $active->valid_from >= $effectiveAt) {
-                throw new DomainException("Waktu efektif harus setelah versi aktif (mencegah overlap).");
+                throw new DomainException('Waktu efektif harus setelah versi aktif (mencegah overlap).');
             }
 
             // Tutup versi lama tepat pada waktu efektif versi baru

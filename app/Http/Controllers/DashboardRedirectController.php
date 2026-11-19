@@ -21,10 +21,20 @@ class DashboardRedirectController extends Controller
         // 2. Jika Pengelola Destinasi (tenant_admin), cari tenant-nya
         if ($user?->role === 'tenant_admin') {
             $tenantRole = UserTenantRole::where('user_id', $user->id)->first();
-            
-            if ($tenantRole) {
-                // Karena kolom 'slug' tidak ada, kita gunakan 'code' atau 'id' sebagai parameter route
-                return redirect()->route('tenant.dashboard', ['tenant' => $tenantRole->tenant->code]);
+
+            if ($tenantRole && $tenantRole->tenant) {
+                return redirect()->route('tenant.dashboard', ['tenant' => $tenantRole->tenant->code ?? $tenantRole->tenant->id]);
+            }
+
+            if ($user->tenant_id && $user->tenant) {
+                return redirect()->route('tenant.dashboard', ['tenant' => $user->tenant->code ?? $user->tenant->id]);
+            }
+
+            $firstTenant = Tenant::where('status', 'active')->first();
+            if ($firstTenant) {
+                $user->forceFill(['tenant_id' => $firstTenant->id])->save();
+
+                return redirect()->route('tenant.dashboard', ['tenant' => $firstTenant->code ?? $firstTenant->id]);
             }
         }
 

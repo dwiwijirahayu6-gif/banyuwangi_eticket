@@ -16,6 +16,7 @@ class VisitSlot extends Model
     {
         return [
             'visit_date' => 'date',
+            'is_active' => 'boolean',
         ];
     }
 

@@ -25,7 +25,7 @@ final class QrTokenService
             // Buat token baru
             $token = OpaqueToken::issue(32);
 
-            $qr = new GateQrToken();
+            $qr = new GateQrToken;
             $qr->gate_id = $locked->id;
             $qr->token_hash = $token['hash'];
             $qr->status = 'active';
@@ -35,7 +35,7 @@ final class QrTokenService
             $this->audit->record('gate_qr_token', $qr->id, 'issued',
                 null, ['gate_id' => $locked->id]);
 
-            return $token['plain']; 
+            return $token['plain'];
         });
     }
 }

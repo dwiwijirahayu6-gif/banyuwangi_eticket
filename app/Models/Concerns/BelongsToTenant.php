@@ -9,7 +9,8 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Trait untuk model tenant-owned.
  *
- * @mixin \Illuminate\Database\Eloquent\Model
+ * @mixin Model
+ *
  * @method static void addGlobalScope(string $scope, \Closure|\Illuminate\Database\Eloquent\Scope $implementation)
  * @method static void creating(\Closure|string $callback)
  */

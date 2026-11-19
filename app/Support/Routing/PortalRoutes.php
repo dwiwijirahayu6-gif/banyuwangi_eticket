@@ -32,7 +32,7 @@ final class PortalRoutes
     public static function tenant(Closure|string $routes): void
     {
         // MENGGUNAKAN 'tenant' (SetTenantContext dari Modul 4), bukan 'role:tenant'
-        Route::middleware(['web', 'auth', 'verified', 'tenant']) 
+        Route::middleware(['web', 'auth', 'verified', 'tenant'])
             ->prefix('tenant/{tenant}')
             ->name('tenant.')
             ->group($routes);

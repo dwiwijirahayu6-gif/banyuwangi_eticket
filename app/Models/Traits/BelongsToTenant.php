@@ -16,7 +16,7 @@ trait BelongsToTenant
         // Global Scope: Otomatis filter data berdasarkan tenant_id yang aktif
         static::addGlobalScope('tenant', function (Builder $builder) {
             $context = app(TenantContext::class);
-            if ($tenantId = $context->id()) {
+            if ($tenantId = $context->idOrNull()) {
                 $builder->where($builder->getQuery()->from.'.tenant_id', $tenantId);
             }
         });
@@ -24,7 +24,7 @@ trait BelongsToTenant
         // Otomatis isi tenant_id saat menyimpan data baru
         static::creating(function ($model) {
             $context = app(TenantContext::class);
-            if ($tenantId = $context->id()) {
+            if ($tenantId = $context->idOrNull()) {
                 $model->tenant_id = $tenantId;
             }
         });

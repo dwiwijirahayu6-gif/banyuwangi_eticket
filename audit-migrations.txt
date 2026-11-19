@@ -1,0 +1,425 @@
+﻿
+========== 2026_01_01_000001_create_tenants_table.php ==========
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('tenants', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('code')->unique();
+            $table->enum('status', ['active', 'inactive', 'suspended'])->default('active');
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('tenants');
+    }
+};
+
+========== 2026_01_01_000002_create_users_table.php ==========
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('users', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('tenant_id')->nullable()->constrained('tenants')->onDelete('cascade');
+            $table->string('name');
+            $table->string('email')->unique();
+            $table->string('password');
+            $table->enum('role', ['super_admin', 'tenant_admin', 'field_officer'])->default('tenant_admin');
+            $table->rememberToken();
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('users');
+    }
+};
+
+========== 2026_01_01_000003_create_destinations_table.php ==========
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+
+        Schema::create('destinations', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('tenant_id')
+                ->constrained('tenants')
+                ->onDelete('cascade');
+
+            $table->string('name');
+            $table->string('slug')->unique();
+            $table->string('image')->nullable();
+            $table->text('description')->nullable();
+            $table->string('location')->nullable();
+            $table->string('operating_hours')
+                ->default('08:00 - 16:00 WIB');
+
+            $table->timestamp('created_at')->useCurrent();
+        });
+
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('destinations');
+    }
+};
+
+========== 2026_01_01_000004_create_ticket_types_table.php ==========
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('ticket_types', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('tenant_id')
+                ->constrained('tenants')
+                ->onDelete('cascade');
+
+            $table->foreignId('destination_id')
+                ->constrained('destinations')
+                ->onDelete('cascade');
+
+            $table->string('name');
+            $table->decimal('price', 19, 4);
+            $table->timestamp('created_at')->useCurrent();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('ticket_types');
+    }
+};
+
+========== 2026_01_01_000004_z_create_visit_slots_table.php ==========
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('visit_slots', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('tenant_id');
+            $table->unsignedBigInteger('destination_id');
+            $table->date('visit_date');
+            $table->integer('quota_capacity')->default(500);
+            $table->integer('quota_remaining')->default(500);
+
+            $table->unique(
+                ['destination_id', 'visit_date'],
+                'uq_destination_visit_date'
+            );
+
+            $table->foreign('tenant_id', 'fk_visit_slots_tenant')
+                ->references('id')
+                ->on('tenants')
+                ->onDelete('cascade');
+
+            $table->foreign('destination_id', 'fk_visit_slots_destination')
+                ->references('id')
+                ->on('destinations')
+                ->onDelete('cascade');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('visit_slots');
+    }
+};
+
+========== 2026_01_01_000005_create_bookings_and_tickets_tables.php ==========
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+
+        Schema::create('bookings', function (Blueprint $table) {
+            $table->id();
+            $table->string('booking_code', 50)->unique();
+            $table->string('customer_name');
+            $table->string('customer_email');
+            $table->string('customer_phone', 50);
+            $table->decimal('total_amount', 19, 4);
+
+            $table->enum('status', [
+                'draft',
+                'pending_payment',
+                'paid',
+                'completed',
+                'cancelled',
+                'expired',
+            ])->default('draft');
+
+            $table->timestamp('created_at')->useCurrent();
+        });
+
+        Schema::create('booking_items', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('booking_id')
+                ->constrained('bookings')
+                ->onDelete('cascade');
+            $table->foreignId('tenant_id')
+                ->constrained('tenants')
+                ->onDelete('cascade');
+            $table->foreignId('ticket_type_id')
+                ->constrained('ticket_types');
+
+            $table->unsignedBigInteger('visit_slot_id');
+            $table->integer('quantity')->default(1);
+            $table->decimal('unit_price_snapshot', 19, 4);
+            $table->decimal('subtotal', 19, 4);
+
+            $table->foreign('visit_slot_id', 'fk_booking_items_visit_slot')
+                ->references('id')
+                ->on('visit_slots');
+        });
+
+        Schema::create('tickets', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('booking_item_id')->constrained('booking_items')->onDelete('cascade');
+            $table->foreignId('booking_id')->constrained('bookings')->onDelete('cascade');
+            $table->foreignId('tenant_id')->constrained('tenants')->onDelete('cascade');
+            $table->foreignId('verified_by_user_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->string('ticket_code')->unique();
+            $table->enum('status', ['issued', 'checked_in', 'expired', 'cancelled'])->default('issued');
+            $table->date('visit_date');
+            $table->timestamps();
+        });
+
+        Schema::create('payments', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('booking_id')
+                ->constrained('bookings')
+                ->onDelete('cascade');
+
+            $table->string('payment_reference', 100)->unique();
+            $table->text('qris_payload')->nullable();
+            $table->decimal('gross_amount', 19, 4);
+
+            $table->enum('status', [
+                'pending',
+                'settlement',
+                'expire',
+                'failed',
+                'cancel',
+            ])->default('pending');
+
+            $table->timestamp('created_at')->useCurrent();
+        });
+
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('payments');
+        Schema::dropIfExists('tickets');
+        Schema::dropIfExists('booking_items');
+        Schema::dropIfExists('bookings');
+    }
+};
+
+========== 2026_08_16_000001_add_role_and_status_to_users_table.php ==========
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+/**
+ * Modul 2 â€“ status interim pada users.
+ * Kolom 'role' sudah ada dari Modul 1 (enum: super_admin, tenant_admin, field_officer),
+ * jadi kita hanya menambahkan kolom 'status'.
+ */
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('users', function (Blueprint $table): void {
+            if (! Schema::hasColumn('users', 'status')) {
+                $table->string('status')->default('active')->after('role');
+            }
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('users', function (Blueprint $table): void {
+            if (Schema::hasColumn('users', 'status')) {
+                $table->dropColumn('status');
+            }
+        });
+    }
+};
+
+========== 2026_08_16_000002_add_email_verified_at_to_users_table.php ==========
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('users', function (Blueprint $table): void {
+            if (! Schema::hasColumn('users', 'email_verified_at')) {
+                $table->timestamp('email_verified_at')->nullable()->after('password');
+            }
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('users', function (Blueprint $table): void {
+            if (Schema::hasColumn('users', 'email_verified_at')) {
+                $table->dropColumn('email_verified_at');
+            }
+        });
+    }
+};
+
+========== 2026_09_29_000006_add_checkout_fields_to_bookings_table.php ==========
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('bookings', function (Blueprint $table) {
+            $table->date('visit_date')->nullable();
+            $table->timestamp('expires_at')->nullable();
+            $table->timestamp('paid_at')->nullable();
+            $table->timestamp('cancelled_at')->nullable();
+            $table->string('cancel_reason', 250)->nullable();
+        });
+
+        // Isi tanggal kunjungan dari tiket terlebih dahulu.
+        DB::table('bookings')
+            ->whereNull('visit_date')
+            ->orderBy('id')
+            ->get()
+            ->each(function ($booking) {
+                $date = DB::table('tickets')
+                    ->where('booking_id', $booking->id)
+                    ->min('visit_date');
+
+                if ($date === null) {
+                    $date = DB::table('booking_items')
+                        ->join(
+                            'visit_slots',
+                            'booking_items.visit_slot_id',
+                            '=',
+                            'visit_slots.id'
+                        )
+                        ->where('booking_items.booking_id', $booking->id)
+                        ->min('visit_slots.visit_date');
+                }
+
+                if ($date !== null) {
+                    DB::table('bookings')
+                        ->where('id', $booking->id)
+                        ->update(['visit_date' => $date]);
+                }
+            });
+    }
+
+    public function down(): void
+    {
+        Schema::table('bookings', function (Blueprint $table) {
+            $table->dropColumn([
+                'visit_date',
+                'expires_at',
+                'paid_at',
+                'cancelled_at',
+                'cancel_reason',
+            ]);
+        });
+    }
+};
+
+========== 2026_10_14_133911_create_sessions_table.php ==========
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('sessions', function (Blueprint $table) {
+            $table->string('id')->primary();
+            $table->foreignId('user_id')->nullable()->index();
+            $table->string('ip_address', 45)->nullable();
+            $table->text('user_agent')->nullable();
+            $table->longText('payload');
+            $table->integer('last_activity')->index();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('sessions');
+    }
+};

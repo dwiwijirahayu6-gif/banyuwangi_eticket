@@ -11,10 +11,10 @@ use Illuminate\Support\Facades\Route;
 
 PortalRoutes::admin(function (): void {
     
-    // 1. Route bawaan dari Modul 2
-    Route::view('/dashboard', 'admin.dashboard')->name('dashboard');
+    // 1. Route Dashboard Super Admin (Mengarah ke view modular admin::dashboard)
+    Route::get('/dashboard', fn () => view('admin::dashboard'))->name('dashboard');
 
-    // 2. Route Manajemen Tenant (Modul 5)
+    // 2. Route Manajemen Tenant
     Route::get('/tenants', [AdminTenantController::class, 'index'])->name('tenants.index');
     Route::get('/tenants/create', [AdminTenantController::class, 'create'])->name('tenants.create');
     Route::post('/tenants', [AdminTenantController::class, 'store'])->name('tenants.store');
