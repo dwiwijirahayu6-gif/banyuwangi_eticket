@@ -23,7 +23,12 @@ class HomeController extends Controller
         }
 
         // Jika membuka halaman utama, tampilkan landing page.
-        $destinations = Destination::with('tenant')->get();
+        $destinations = Destination::query()
+            ->whereHas('tenant', function ($query) {
+                $query->where('status', 'active');
+            })
+            ->with('tenant')
+            ->get();
 
         return view('landing', compact('destinations'));
     }

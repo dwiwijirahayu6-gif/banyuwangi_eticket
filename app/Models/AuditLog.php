@@ -9,10 +9,11 @@ class AuditLog extends Model
 {
     use HasFactory;
 
-    // Mengizinkan semua kolom diisi
     protected $guarded = [];
 
-    // Konversi tipe data secara otomatis
+    // Tabel audit_logs tidak memiliki kolom updated_at
+    public const UPDATED_AT = null;
+
     protected function casts(): array
     {
         return [

@@ -19,6 +19,7 @@ PortalRoutes::admin(function (): void {
     Route::get('/tenants/create', [AdminTenantController::class, 'create'])->name('tenants.create');
     Route::post('/tenants', [AdminTenantController::class, 'store'])->name('tenants.store');
     Route::get('/tenants/{tenant}', [AdminTenantController::class, 'edit'])->name('tenants.edit');
+    Route::put('/tenants/{tenant}', [AdminTenantController::class, 'update'])->name('tenants.update');
 
     // 3. Route Ubah Status (Aktif/Nonaktif)
     Route::post('/tenants/{tenant}/status', AdminTenantStatusController::class)->name('tenants.status');

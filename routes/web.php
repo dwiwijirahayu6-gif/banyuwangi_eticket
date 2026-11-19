@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
 
+
 // --------------------------------------------------------------------------
 // 1. Portal Pelanggan / Publik (Katalog Wisata Banyuwangi)
 // --------------------------------------------------------------------------
