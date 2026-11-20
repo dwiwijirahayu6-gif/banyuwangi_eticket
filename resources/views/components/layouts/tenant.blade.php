@@ -222,7 +222,6 @@ $user = auth()->user();
             </main>
         </div>
     </div>
-    @fluxScripts
 </body>
 
 </html>
